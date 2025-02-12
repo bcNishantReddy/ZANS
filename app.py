@@ -74,9 +74,15 @@ with tab2:
 
     for idx, item in enumerate(DICE_OPTIONS):
         image_path = IMAGE_PATHS.get(item, None)
+
+        # Check if file exists and is a valid image before displaying
         if image_path and os.path.exists(image_path):
-            with (col1 if idx % 4 == 0 else col2 if idx % 4 == 1 else col3 if idx % 4 == 2 else col4):
-                st.image(image_path, caption=item, use_column_width=True)
+            try:
+                img = Image.open(image_path)  # Attempt to open with PIL
+                with (col1 if idx % 4 == 0 else col2 if idx % 4 == 1 else col3 if idx % 4 == 2 else col4):
+                    st.image(img, caption=item, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error loading image: {image_path} ({str(e)})")
         else:
             st.error(f"Image not found: {image_path}")
 

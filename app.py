@@ -1,5 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
+import os
 from PIL import Image
 
 # Set your Gemini API key (Use st.secrets for better security)
@@ -15,15 +16,17 @@ DICE_OPTIONS = [
     "Star", "Dinosaur", "Aeroplane", "Snake", "Crab"
 ]
 
-# Image dictionary (Ensure images are stored in an accessible location)
-IMAGE_PATHS = {item: f"images/{item.lower()}.png" for item in DICE_OPTIONS}
+# Get absolute path for images
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IMAGE_FOLDER = os.path.join(BASE_DIR, "images")
+IMAGE_PATHS = {item: os.path.join(IMAGE_FOLDER, f"{item.lower()}.png") for item in DICE_OPTIONS}
 
 # Function to generate a precise prompt for Gemini 1.5
 def generate_prompt(selected_items):
     prompt = f"""
     You are a storytelling AI that generates fun, adventurous, and engaging stories for children aged 4-10.
     Use simple yet immersive language that encourages parents to interact with their children while narrating.
-    
+
     **Story Elements**:
     - Include the following elements in the story: {', '.join(selected_items)}.
     - The story should be **imaginative**, **exciting**, and **child-friendly**.
@@ -70,7 +73,11 @@ with tab2:
     col1, col2, col3, col4 = st.columns(4)
 
     for idx, item in enumerate(DICE_OPTIONS):
-        with (col1 if idx % 4 == 0 else col2 if idx % 4 == 1 else col3 if idx % 4 == 2 else col4):
-            st.image(IMAGE_PATHS[item], caption=item, use_column_width=True)
+        image_path = IMAGE_PATHS.get(item, None)
+        if image_path and os.path.exists(image_path):
+            with (col1 if idx % 4 == 0 else col2 if idx % 4 == 1 else col3 if idx % 4 == 2 else col4):
+                st.image(image_path, caption=item, use_column_width=True)
+        else:
+            st.error(f"Image not found: {image_path}")
 
 st.info("This tool encourages parents to create meaningful stories with their children while fostering creativity and imagination.")

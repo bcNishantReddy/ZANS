@@ -21,6 +21,12 @@ DICE_OPTIONS = [
 # Ensure images are directly accessed from "images/item.png"
 IMAGE_PATHS = {item: f"images/{item.lower()}.png" for item in DICE_OPTIONS}
 
+# Initialize session state to store story
+if "story" not in st.session_state:
+    st.session_state.story = ""
+if "audio_html" not in st.session_state:
+    st.session_state.audio_html = ""
+
 # Custom CSS for better UI
 st.markdown("""
     <style>
@@ -93,8 +99,7 @@ def text_to_speech(text):
     with open("story.mp3", "rb") as audio_file:
         audio_bytes = audio_file.read()
         encoded_audio = base64.b64encode(audio_bytes).decode()
-        audio_html = f'<audio controls autoplay><source src="data:audio/mp3;base64,{encoded_audio}" type="audio/mp3"></audio>'
-        return audio_html
+        return f'<audio controls autoplay><source src="data:audio/mp3;base64,{encoded_audio}" type="audio/mp3"></audio>'
 
 # 🎉 Branding Header
 st.markdown("<h1 class='title'>🌟 Welcome to Zans StoryCraft! 🎲</h1>", unsafe_allow_html=True)
@@ -107,20 +112,22 @@ with tab1:
     st.header("🎲 Select the dice outcomes:")
     selected_items = [st.selectbox(f"🎲 Dice {i+1}", DICE_OPTIONS, key=f"dice_{i}") for i in range(4)]
 
-    story = ""
     if st.button("📝 Generate Story"):
         with st.spinner("✨ Creating a magical adventure..."):
             prompt = generate_prompt(selected_items)
-            story = get_story_from_gemini(prompt)
-            st.markdown("<div class='story-box'>", unsafe_allow_html=True)
-            st.subheader("📖 Your Story:")
-            st.write(story)
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.session_state.story = get_story_from_gemini(prompt)
 
-    if story:
+    if st.session_state.story:
+        st.markdown("<div class='story-box'>", unsafe_allow_html=True)
+        st.subheader("📖 Your Story:")
+        st.write(st.session_state.story)
+        st.markdown("</div>", unsafe_allow_html=True)
+
         if st.button("🔊 Read Aloud"):
-            audio_html = text_to_speech(story)
-            st.markdown(audio_html, unsafe_allow_html=True)
+            st.session_state.audio_html = text_to_speech(st.session_state.story)
+
+    if st.session_state.audio_html:
+        st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
 
 # 🎨 Itinerary Page with Playful Image Display
 with tab2:

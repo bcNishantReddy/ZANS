@@ -2,6 +2,8 @@ import streamlit as st
 import google.generativeai as genai
 import os
 from PIL import Image
+from gtts import gTTS
+import base64
 
 # Set your Gemini API key (Use st.secrets for better security)
 GEMINI_API_KEY = "AIzaSyCkucQ1Egsn0uSr-1FxMYe7BZW4Pp0Ktr8"
@@ -19,35 +21,37 @@ DICE_OPTIONS = [
 # Ensure images are directly accessed from "images/item.png"
 IMAGE_PATHS = {item: f"images/{item.lower()}.png" for item in DICE_OPTIONS}
 
-# Custom CSS for playful design
+# Custom CSS for better UI
 st.markdown("""
     <style>
-        body {
-            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-        }
         .stApp {
-            background: linear-gradient(135deg, #ffdde1, #fc6076);
-            color: white;
-            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: #fdfdfd;
+            font-family: Arial, sans-serif;
         }
         .title {
             text-align: center;
-            font-size: 42px;
+            font-size: 40px;
             font-weight: bold;
-            color: #ff4081;
-            text-shadow: 2px 2px 5px #ff79b0;
+            color: #4CAF50;
         }
-        .fun-text {
-            color: #ff5722;
-            font-size: 22px;
+        .subtitle {
             text-align: center;
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 20px;
         }
         .stButton > button {
-            background: #ff4081;
+            background: #4CAF50;
             color: white;
             font-size: 18px;
-            border-radius: 15px;
-            padding: 10px 20px;
+            border-radius: 10px;
+            padding: 12px 24px;
+        }
+        .story-box {
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
         }
     </style>
 """, unsafe_allow_html=True)
@@ -81,9 +85,20 @@ def get_story_from_gemini(prompt):
     response = model.generate_content(prompt)
     return response.text if response else "Error generating story."
 
+# Function to convert text to speech (TTS) and provide a download link
+def text_to_speech(text):
+    tts = gTTS(text, lang="en")
+    tts.save("story.mp3")
+
+    with open("story.mp3", "rb") as audio_file:
+        audio_bytes = audio_file.read()
+        encoded_audio = base64.b64encode(audio_bytes).decode()
+        audio_html = f'<audio controls autoplay><source src="data:audio/mp3;base64,{encoded_audio}" type="audio/mp3"></audio>'
+        return audio_html
+
 # 🎉 Branding Header
-st.markdown("<h1 class='title'>🌈 Welcome to Zans StoryCraft! 🎲</h1>", unsafe_allow_html=True)
-st.markdown("<p class='fun-text'>Where creativity meets adventure! Let's craft a story together. 🎭✨</p>", unsafe_allow_html=True)
+st.markdown("<h1 class='title'>🌟 Welcome to Zans StoryCraft! 🎲</h1>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>A magical world of storytelling and adventure! 🏰📖✨</p>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(["📖 Generate Story", "📜 Dice Itinerary"])
 
@@ -92,12 +107,20 @@ with tab1:
     st.header("🎲 Select the dice outcomes:")
     selected_items = [st.selectbox(f"🎲 Dice {i+1}", DICE_OPTIONS, key=f"dice_{i}") for i in range(4)]
 
+    story = ""
     if st.button("📝 Generate Story"):
         with st.spinner("✨ Creating a magical adventure..."):
             prompt = generate_prompt(selected_items)
             story = get_story_from_gemini(prompt)
+            st.markdown("<div class='story-box'>", unsafe_allow_html=True)
             st.subheader("📖 Your Story:")
             st.write(story)
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    if story:
+        if st.button("🔊 Read Aloud"):
+            audio_html = text_to_speech(story)
+            st.markdown(audio_html, unsafe_allow_html=True)
 
 # 🎨 Itinerary Page with Playful Image Display
 with tab2:

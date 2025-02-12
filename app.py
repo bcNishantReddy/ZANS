@@ -16,8 +16,41 @@ DICE_OPTIONS = [
     "Star", "Dinosaur", "Aeroplane", "Snake", "Crab"
 ]
 
-# Ensure images are directly accessed as "images/item.png"
+# Ensure images are directly accessed from "images/item.png"
 IMAGE_PATHS = {item: f"images/{item.lower()}.png" for item in DICE_OPTIONS}
+
+# Custom CSS for playful design
+st.markdown("""
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        }
+        .stApp {
+            background: linear-gradient(135deg, #ffdde1, #fc6076);
+            color: white;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+        }
+        .title {
+            text-align: center;
+            font-size: 42px;
+            font-weight: bold;
+            color: #ff4081;
+            text-shadow: 2px 2px 5px #ff79b0;
+        }
+        .fun-text {
+            color: #ff5722;
+            font-size: 22px;
+            text-align: center;
+        }
+        .stButton > button {
+            background: #ff4081;
+            color: white;
+            font-size: 18px;
+            border-radius: 15px;
+            padding: 10px 20px;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Function to generate a precise prompt for Gemini 1.5
 def generate_prompt(selected_items):
@@ -48,39 +81,37 @@ def get_story_from_gemini(prompt):
     response = model.generate_content(prompt)
     return response.text if response else "Error generating story."
 
-# Streamlit UI
-st.title("🎲 StoryCraft: Collaborative Storytelling with Dice")
+# 🎉 Branding Header
+st.markdown("<h1 class='title'>🌈 Welcome to Zans StoryCraft! 🎲</h1>", unsafe_allow_html=True)
+st.markdown("<p class='fun-text'>Where creativity meets adventure! Let's craft a story together. 🎭✨</p>", unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["Generate Story", "Itinerary"])
+tab1, tab2 = st.tabs(["📖 Generate Story", "📜 Dice Itinerary"])
 
-# Story Generation Tab
+# 🎭 Story Generation Tab
 with tab1:
-    st.header("Select the dice outcomes:")
-    selected_items = [st.selectbox(f"Dice {i+1}", DICE_OPTIONS, key=f"dice_{i}") for i in range(4)]
+    st.header("🎲 Select the dice outcomes:")
+    selected_items = [st.selectbox(f"🎲 Dice {i+1}", DICE_OPTIONS, key=f"dice_{i}") for i in range(4)]
 
-    if st.button("Generate Story"):
-        with st.spinner("Generating your story..."):
+    if st.button("📝 Generate Story"):
+        with st.spinner("✨ Creating a magical adventure..."):
             prompt = generate_prompt(selected_items)
             story = get_story_from_gemini(prompt)
-            st.subheader("Your Story:")
+            st.subheader("📖 Your Story:")
             st.write(story)
 
-# Itinerary Page
+# 🎨 Itinerary Page with Playful Image Display
 with tab2:
-    st.header("Dice Faces & Images")
+    st.header("🎨 Dice Faces & Images")
     col1, col2, col3, col4 = st.columns(4)
 
     for idx, item in enumerate(DICE_OPTIONS):
         image_path = IMAGE_PATHS.get(item)
 
-        # Debugging: Print image path
-        print(f"Loading image: {image_path}")
-
         if image_path and os.path.exists(image_path):
             try:
                 img = Image.open(image_path)
-                img.verify()  # Validate image file
-                img = Image.open(image_path)  # Reload after verify
+                img.verify()
+                img = Image.open(image_path)
                 with (col1 if idx % 4 == 0 else col2 if idx % 4 == 1 else col3 if idx % 4 == 2 else col4):
                     st.image(img, caption=item, use_container_width=True)
             except Exception as e:
@@ -88,4 +119,4 @@ with tab2:
         else:
             st.error(f"Image not found: {image_path}")
 
-st.info("This tool encourages parents to create meaningful stories with their children while fostering creativity and imagination.")
+st.info("💡 Zans StoryCraft is designed to inspire creativity in children while making storytelling a delightful experience for parents. Have fun! 🎉")

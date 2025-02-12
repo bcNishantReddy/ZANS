@@ -16,10 +16,8 @@ DICE_OPTIONS = [
     "Star", "Dinosaur", "Aeroplane", "Snake", "Crab"
 ]
 
-# Get absolute path for images
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-IMAGE_FOLDER = os.path.join(BASE_DIR, "images")
-IMAGE_PATHS = {item: os.path.join(IMAGE_FOLDER, f"{item.lower()}.png") for item in DICE_OPTIONS}
+# Ensure images are directly accessed as "images/item.png"
+IMAGE_PATHS = {item: f"images/{item.lower()}.png" for item in DICE_OPTIONS}
 
 # Function to generate a precise prompt for Gemini 1.5
 def generate_prompt(selected_items):
@@ -73,16 +71,20 @@ with tab2:
     col1, col2, col3, col4 = st.columns(4)
 
     for idx, item in enumerate(DICE_OPTIONS):
-        image_path = IMAGE_PATHS.get(item, None)
+        image_path = IMAGE_PATHS.get(item)
 
-        # Check if file exists and is a valid image before displaying
+        # Debugging: Print image path
+        print(f"Loading image: {image_path}")
+
         if image_path and os.path.exists(image_path):
             try:
-                img = Image.open(image_path)  # Attempt to open with PIL
+                img = Image.open(image_path)
+                img.verify()  # Validate image file
+                img = Image.open(image_path)  # Reload after verify
                 with (col1 if idx % 4 == 0 else col2 if idx % 4 == 1 else col3 if idx % 4 == 2 else col4):
                     st.image(img, caption=item, use_container_width=True)
             except Exception as e:
-                st.error(f"Error loading image: {image_path} ({str(e)})")
+                st.error(f"Error loading image {image_path}: {str(e)}")
         else:
             st.error(f"Image not found: {image_path}")
 
